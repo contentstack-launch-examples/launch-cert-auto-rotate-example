@@ -1,0 +1,37 @@
+{
+  "name": "launch-cert-rotate",
+  "version": "0.1.0",
+  "description": "Example: keep a Let's Encrypt certificate (certbot + Hostinger DNS) on a Contentstack Launch custom domain renewed automatically.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "launch-cert-rotate": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc && chmod +x dist/cli.js",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "contentstack",
+    "launch",
+    "ssl",
+    "letsencrypt",
+    "certbot",
+    "hostinger"
+  ],
+  "dependencies": {
+    "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "typescript": "~5.9.3"
+  }
+}

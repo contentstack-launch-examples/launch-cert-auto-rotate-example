@@ -1,0 +1,246 @@
+{
+	"info": {
+		"_postman_id": "12161d3b-5a8e-451a-a24c-dae34944a097",
+		"name": "Launch — custom certificate API",
+		"description": "The Launch API requests used by launch-cert-rotate.\n\nSet the collection variables `HOST`, `AUTHTOKEN`, `ORG_UID`, `PROJECT_UID`, `ENVIRONMENT_UID` and `DOMAIN_URL`. `DOMAIN_UID` is captured by **List domains**.\n\nThese endpoints are not part of the public Launch API reference and may change.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "40951024"
+	},
+	"item": [
+		{
+			"name": "List domains",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+							"const d = pm.response.json().domains || [];",
+							"if (d.length) pm.collectionVariables.set(\"DOMAIN_UID\", d[0].uid);"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "authtoken",
+						"value": "{{AUTHTOKEN}}"
+					},
+					{
+						"key": "organization_uid",
+						"value": "{{ORG_UID}}"
+					},
+					{
+						"key": "x-project-uid",
+						"value": "{{PROJECT_UID}}",
+						"description": "Required on every request."
+					}
+				],
+				"url": {
+					"raw": "{{HOST}}/projects/{{PROJECT_UID}}/environments/{{ENVIRONMENT_UID}}/domains?limit=10&skip=0",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"projects",
+						"{{PROJECT_UID}}",
+						"environments",
+						"{{ENVIRONMENT_UID}}",
+						"domains"
+					],
+					"query": [
+						{
+							"key": "limit",
+							"value": "10",
+							"description": "Capped at 100 — each domain costs one live CDN call for domainInfo"
+						},
+						{
+							"key": "skip",
+							"value": "0"
+						}
+					]
+				},
+				"description": "Returns `{ pagination, domains[] }`. Each domain includes `uid`, `url`, `sslMethod`, `customCertificateExpiresAt` and `domainInfo` (`status` = hostname, `sslStatus` = certificate). Maximum `limit` is 100."
+			},
+			"response": []
+		},
+		{
+			"name": "Upload certificate (custom SSL)",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "authtoken",
+						"value": "{{AUTHTOKEN}}"
+					},
+					{
+						"key": "organization_uid",
+						"value": "{{ORG_UID}}"
+					},
+					{
+						"key": "x-project-uid",
+						"value": "{{PROJECT_UID}}",
+						"description": "Required on every request."
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"url\": \"{{DOMAIN_URL}}\",\n  \"sslMethod\": \"CUSTOM\",\n  \"customCertificate\": \"-----BEGIN CERTIFICATE-----\\nREPLACE\\n-----END CERTIFICATE-----\",\n  \"customPrivateKey\": \"-----BEGIN PRIVATE KEY-----\\nREPLACE\\n-----END PRIVATE KEY-----\",\n  \"intermediateCertificates\": \"-----BEGIN CERTIFICATE-----\\nREPLACE\\n-----END CERTIFICATE-----\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{HOST}}/projects/{{PROJECT_UID}}/environments/{{ENVIRONMENT_UID}}/domains/{{DOMAIN_UID}}",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"projects",
+						"{{PROJECT_UID}}",
+						"environments",
+						"{{ENVIRONMENT_UID}}",
+						"domains",
+						"{{DOMAIN_UID}}"
+					]
+				},
+				"description": "Uploads a certificate and switches the domain to custom SSL.\n\n- `url` must be the domain's current url (changing it renames the domain).\n- `sslMethod: \"CUSTOM\"` is required; without it the certificate is ignored.\n- `intermediateCertificates` is optional if `customCertificate` already holds the full chain.\n- Each PEM field is limited to 32 KiB; newlines must be escaped as `\\n`."
+			},
+			"response": []
+		},
+		{
+			"name": "Revalidate (live SSL/DNS check)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "authtoken",
+						"value": "{{AUTHTOKEN}}"
+					},
+					{
+						"key": "organization_uid",
+						"value": "{{ORG_UID}}"
+					},
+					{
+						"key": "x-project-uid",
+						"value": "{{PROJECT_UID}}",
+						"description": "Required on every request."
+					}
+				],
+				"url": {
+					"raw": "{{HOST}}/projects/{{PROJECT_UID}}/environments/{{ENVIRONMENT_UID}}/domains/{{DOMAIN_UID}}/revalidate",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"projects",
+						"{{PROJECT_UID}}",
+						"environments",
+						"{{ENVIRONMENT_UID}}",
+						"domains",
+						"{{DOMAIN_UID}}",
+						"revalidate"
+					]
+				},
+				"description": "Forces a live re-check and returns `{ domainInfo }` (can be `null`). Use it after an upload to see when `sslStatus` becomes `active`."
+			},
+			"response": []
+		},
+		{
+			"name": "Revert to automatic SSL",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "authtoken",
+						"value": "{{AUTHTOKEN}}"
+					},
+					{
+						"key": "organization_uid",
+						"value": "{{ORG_UID}}"
+					},
+					{
+						"key": "x-project-uid",
+						"value": "{{PROJECT_UID}}",
+						"description": "Required on every request."
+					},
+					{
+						"key": "content-type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"url\": \"{{DOMAIN_URL}}\",\n  \"sslMethod\": \"AUTOMATIC\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{HOST}}/projects/{{PROJECT_UID}}/environments/{{ENVIRONMENT_UID}}/domains/{{DOMAIN_UID}}",
+					"host": [
+						"{{HOST}}"
+					],
+					"path": [
+						"projects",
+						"{{PROJECT_UID}}",
+						"environments",
+						"{{ENVIRONMENT_UID}}",
+						"domains",
+						"{{DOMAIN_UID}}"
+					]
+				},
+				"description": "Switches the domain back to Launch-managed certificates and deletes the stored custom certificate and key."
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "HOST",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "AUTHTOKEN",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "ORG_UID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "PROJECT_UID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "ENVIRONMENT_UID",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "DOMAIN_URL",
+			"value": "www.mysite.com",
+			"type": "string"
+		},
+		{
+			"key": "DOMAIN_UID",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
