@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "12161d3b-5a8e-451a-a24c-dae34944a097",
 		"name": "Launch — custom certificate API",
-		"description": "The Launch API requests used by launch-cert-rotate.\n\nSet the collection variables `HOST`, `AUTHTOKEN`, `ORG_UID`, `PROJECT_UID`, `ENVIRONMENT_UID` and `DOMAIN_URL`. `DOMAIN_UID` is captured by **List domains**.\n\nThese endpoints are not part of the public Launch API reference and may change.",
+		"description": "The Launch API requests used by launch-cert-rotate.\n\nSet the collection variables `HOST`, `AUTHTOKEN`, `ORG_UID`, `PROJECT_UID`, `ENVIRONMENT_UID` and `DOMAIN_URL`. `DOMAIN_UID` is captured by **List domains**.\n\nBoth endpoints are documented in the Domains section of the Launch API reference: https://www.contentstack.com/docs/developers/apis/launch-api/swagger",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "40951024"
 	},
@@ -32,11 +32,6 @@
 					{
 						"key": "organization_uid",
 						"value": "{{ORG_UID}}"
-					},
-					{
-						"key": "x-project-uid",
-						"value": "{{PROJECT_UID}}",
-						"description": "Required on every request."
 					}
 				],
 				"url": {
@@ -81,11 +76,6 @@
 						"value": "{{ORG_UID}}"
 					},
 					{
-						"key": "x-project-uid",
-						"value": "{{PROJECT_UID}}",
-						"description": "Required on every request."
-					},
-					{
 						"key": "content-type",
 						"value": "application/json"
 					}
@@ -118,44 +108,6 @@
 			"response": []
 		},
 		{
-			"name": "Revalidate (live SSL/DNS check)",
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "authtoken",
-						"value": "{{AUTHTOKEN}}"
-					},
-					{
-						"key": "organization_uid",
-						"value": "{{ORG_UID}}"
-					},
-					{
-						"key": "x-project-uid",
-						"value": "{{PROJECT_UID}}",
-						"description": "Required on every request."
-					}
-				],
-				"url": {
-					"raw": "{{HOST}}/projects/{{PROJECT_UID}}/environments/{{ENVIRONMENT_UID}}/domains/{{DOMAIN_UID}}/revalidate",
-					"host": [
-						"{{HOST}}"
-					],
-					"path": [
-						"projects",
-						"{{PROJECT_UID}}",
-						"environments",
-						"{{ENVIRONMENT_UID}}",
-						"domains",
-						"{{DOMAIN_UID}}",
-						"revalidate"
-					]
-				},
-				"description": "Forces a live re-check and returns `{ domainInfo }` (can be `null`). Use it after an upload to see when `sslStatus` becomes `active`."
-			},
-			"response": []
-		},
-		{
 			"name": "Revert to automatic SSL",
 			"request": {
 				"method": "PUT",
@@ -167,11 +119,6 @@
 					{
 						"key": "organization_uid",
 						"value": "{{ORG_UID}}"
-					},
-					{
-						"key": "x-project-uid",
-						"value": "{{PROJECT_UID}}",
-						"description": "Required on every request."
 					},
 					{
 						"key": "content-type",

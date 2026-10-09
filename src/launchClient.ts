@@ -34,13 +34,11 @@ export class LaunchClient {
       accept: 'application/json',
       authtoken: this.config.authtoken,
       organization_uid: this.config.orgUid,
-      // Required: Launch reads the project from this header for its permission checks.
-      'x-project-uid': this.config.projectUid,
     };
     if (body !== undefined) headers['content-type'] = 'application/json';
     this.logger.debug(`→ ${method} ${path}`, body === undefined ? { headers } : { headers, body });
 
-    // GET and revalidate are safe to retry on network errors and 429/5xx; uploads are sent once.
+    // GET is safe to retry on network errors and 429/5xx; uploads are sent once.
     const attempts = method === 'PUT' ? 1 : 3;
     for (let attempt = 1; ; attempt++) {
       let res: Response;
@@ -96,12 +94,6 @@ export class LaunchClient {
       customPrivateKey: cert.key,
       ...(cert.chain ? { intermediateCertificates: cert.chain } : {}),
     });
-  }
-
-  /** Ask Launch to re-check DNS/SSL now; returns the fresh domainInfo. */
-  async revalidate(domain: LaunchDomain): Promise<LaunchDomain['domainInfo']> {
-    const res = await this.request<{ domainInfo?: LaunchDomain['domainInfo'] }>('POST', `/${encodeURIComponent(domain.uid)}/revalidate`);
-    return res?.domainInfo ?? null;
   }
 }
 

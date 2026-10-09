@@ -53,10 +53,10 @@ export async function uploadIfNewer(
   logger.info(`Uploading the certificate expiring ${day(cert.validTo)} to ${url} (Launch has: ${day(stored)})...`);
   await client.uploadCertificate(domain, cert);
 
-  // Wait until Launch reports the certificate as active.
+  // Wait until Launch reports the certificate as active. The list endpoint returns a live SSL status.
   const deadline = Date.now() + (opts.waitSeconds ?? 300) * 1000;
   for (let delay = 5_000; ; delay = Math.min(delay * 2, 30_000)) {
-    const info = await client.revalidate(domain);
+    const info = (await findDomain(client, url)).domainInfo;
     const ssl = info?.sslStatus?.toLowerCase();
     if (ssl === 'active') {
       if (info?.status && info.status.toLowerCase() !== 'active') {
@@ -88,7 +88,7 @@ export async function uploadIfNewer(
 /** One-line status of a domain, using a live check. */
 export async function domainStatus(client: LaunchClient, url: string): Promise<string> {
   const domain = await findDomain(client, url);
-  const info = await client.revalidate(domain);
+  const info = domain.domainInfo;
   const expires = domain.customCertificateExpiresAt;
   const days = expires ? Math.floor((new Date(expires).getTime() - Date.now()) / 86_400_000) : undefined;
   const lines = [
